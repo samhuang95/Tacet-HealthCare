@@ -31,7 +31,19 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._tray   = tray
         self._thread = None
-        self._alert  = AlertWindow()
+        self._alert = AlertWindow(
+            color="#c0392b",
+            title="Blink!",
+            message="You haven't blinked in a while.",
+            hint="Blink to dismiss",
+        )
+        self._break_alert = AlertWindow(
+            color="#1a56db",
+            title="Take a Break!",
+            message="You've been sitting for 30 minutes.",
+            hint="Click to dismiss",
+            click_to_dismiss=True,
+        )
         self.setWindowTitle("Tacet HealthCare — Blink Monitor")
         self.setMinimumSize(700, 580)
         self._setup_ui()
@@ -117,6 +129,7 @@ class MainWindow(QMainWindow):
             self._thread = None
 
         self._alert.dismiss()
+        self._break_alert.dismiss()
         self._video_label.clear()
         self._status_label.setText(f"Connecting to camera {camera_index}...")
 
@@ -124,7 +137,10 @@ class MainWindow(QMainWindow):
         self._thread.frame_ready.connect(self._update_frame)
         self._thread.blink_detected.connect(self._on_blink)
         self._thread.no_blink_alert.connect(self._alert.show_alert)
+        self._thread.sit_break_alert.connect(self._break_alert.show_alert)
+        self._thread.sit_break_away.connect(self._break_alert.dismiss)
         self._thread.status_changed.connect(self._status_label.setText)
+        self._break_alert.dismissed.connect(self._thread.reset_sit_timer)
         self._thread.start()
 
     # ── Slots ────────────────────────────────────────────────────────────────
@@ -155,5 +171,6 @@ class MainWindow(QMainWindow):
 
     def quit(self):
         self._alert.dismiss()
+        self._break_alert.dismiss()
         if self._thread:
             self._thread.stop()

@@ -1,7 +1,12 @@
 # Tacet HealthCare
 > Master the pause. Perfect the performance.
 
-A Windows 11 desktop application that monitors eye blink activity via webcam. When the user goes 5 seconds without blinking, an alert window appears and auto-dismisses on the next detected blink. The app runs continuously in the system tray.
+A Windows 11 desktop application that monitors eye and posture health via webcam. It tracks two conditions:
+
+- **Blink reminder** — after 5 seconds without a detected blink, a red alert appears and auto-dismisses on the next blink.
+- **Sit break reminder** — after 30 continuous minutes of sitting, a blue alert appears. Dismiss it by clicking or by standing up (face absent from camera for 3+ seconds).
+
+The app runs continuously in the system tray.
 
 ---
 
