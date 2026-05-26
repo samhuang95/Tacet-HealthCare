@@ -1,0 +1,33 @@
+# Virtual environment
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Auto-downloaded assets
+models/
+
+# Environment variables
+.env
+.env.*
+
+# IDE
+.vscode/settings.json
+.idea/
+*.suo
+*.user
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs & temp
+*.log
+*.tmp
