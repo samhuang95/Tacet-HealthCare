@@ -13,6 +13,11 @@ build/
 # Auto-downloaded assets
 models/
 
+# PyInstaller build output
+build/
+dist/
+release/
+
 # Environment variables
 .env
 .env.*
@@ -31,3 +36,5 @@ $RECYCLE.BIN/
 # Logs & temp
 *.log
 *.tmp
+
+

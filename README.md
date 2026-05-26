@@ -46,7 +46,7 @@ pip install -r requirements.txt
 ### 5. Run the app
 
 ```powershell
-python main.py
+.\scripts\run.ps1
 ```
 
 On first launch, the app downloads the MediaPipe face landmark model (~3.7 MB) automatically and saves it to `models/`. Subsequent launches skip the download.
@@ -67,6 +67,24 @@ Tacet-HealthCare/
     ├── camera_utils.py      # Camera enumeration helper
     └── tray_icon.py         # Programmatic system tray icon
 ```
+
+---
+
+## Packaging
+
+Produces a standalone folder (`release\`) that runs on any Windows machine without Python installed.
+
+```powershell
+.\scripts\build.ps1
+```
+
+The script handles everything in one step:
+1. Runs PyInstaller with `tacet.spec`
+2. Stops any running instance of the app
+3. Replaces `release\` with the new build
+4. Cleans up temporary `build\` and `dist\` folders
+
+> `release\` contains `TacetHealthCare.exe` and `_internal\`. Both must be distributed together. The app downloads `models/face_landmarker.task` (~3.7 MB) on first launch.
 
 ---
 

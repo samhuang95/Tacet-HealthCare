@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import urllib.request
 import cv2
@@ -9,7 +10,10 @@ from mediapipe.tasks.python import vision as mp_vision
 from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtGui import QImage
 
-_MODEL_DIR  = os.path.join(os.path.dirname(__file__), "..", "models")
+# When frozen by PyInstaller, place models/ next to the .exe; otherwise next to project root.
+_BASE_DIR   = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) \
+              else os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_MODEL_DIR  = os.path.join(_BASE_DIR, "models")
 _MODEL_PATH = os.path.join(_MODEL_DIR, "face_landmarker.task")
 _MODEL_URL  = (
     "https://storage.googleapis.com/mediapipe-models/"
@@ -91,6 +95,8 @@ class CameraThread(QThread):
 
                 while self._running:
                     ret, frame = cap.read()
+                    if ret:
+                        frame = cv2.flip(frame, 1)
                     if not ret:
                         fail_count += 1
                         if fail_count >= RECONNECT_FAIL_LIMIT:

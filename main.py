@@ -1,4 +1,16 @@
 import sys
+import os
+import traceback
+
+# In PyInstaller no-console mode sys.stdout/stderr are None.
+# Redirect them to a log file before any other import so mediapipe
+# (and other libs) that write to stdout don't crash on startup.
+if getattr(sys, "frozen", False) and sys.stdout is None:
+    _LOG = os.path.join(os.path.dirname(sys.executable), "error.log")
+    _logfile = open(_LOG, "w", buffering=1)
+    sys.stdout = _logfile
+    sys.stderr = _logfile
+
 from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 from PyQt6.QtGui import QAction
 from src.tray_icon import create_app_icon
@@ -45,4 +57,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        traceback.print_exc()   # goes to sys.stderr (our log file in frozen mode)
+        sys.exit(1)
