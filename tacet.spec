@@ -7,7 +7,7 @@ a = Analysis(
     ["main.py"],
     pathex=["."],
     binaries=mp_binaries,
-    datas=mp_datas,
+    datas=mp_datas + [("assets", "assets")],
     hiddenimports=mp_hiddenimports + [
         "PyQt6.sip",
         "cv2",
@@ -31,7 +31,7 @@ exe = EXE(
     strip=False,
     upx=False,          # UPX disabled — avoids antivirus false positives
     console=False,      # No terminal window
-    icon=None,
+    icon="assets/logo.ico",
 )
 
 coll = COLLECT(

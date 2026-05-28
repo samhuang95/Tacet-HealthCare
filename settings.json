@@ -1,0 +1,8 @@
+{
+  "blink_enabled": false,
+  "blink_threshold": 8.0,
+  "sit_enabled": true,
+  "sit_threshold": 30,
+  "water_enabled": true,
+  "water_threshold": 30
+}

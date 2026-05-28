@@ -7,6 +7,8 @@ from PyQt6.QtCore import Qt
 from .camera_thread import CameraThread
 from .camera_utils import scan_cameras
 from .alert_window import AlertWindow
+from .settings import AppSettings
+from .settings_dialog import SettingsDialog
 
 _TOOLBAR_STYLE = (
     "background:#111827; padding:6px 10px; border-bottom:1px solid #1e293b;"
@@ -29,8 +31,9 @@ _BTN_STYLE = (
 class MainWindow(QMainWindow):
     def __init__(self, tray: QSystemTrayIcon):
         super().__init__()
-        self._tray   = tray
-        self._thread = None
+        self._tray     = tray
+        self._thread   = None
+        self._settings = AppSettings.load()
         self._alert = AlertWindow(
             color="#c0392b",
             title="Blink!",
@@ -41,7 +44,14 @@ class MainWindow(QMainWindow):
             color="#1a56db",
             title="Take a Break!",
             message="You've been sitting for 30 minutes.",
-            hint="Click to dismiss",
+            hint="Click or stand up to dismiss",
+            click_to_dismiss=True,
+        )
+        self._water_alert = AlertWindow(
+            color="#0891b2",
+            title="Drink Water!",
+            message="You haven't had water in 30 minutes.",
+            hint="Drink or click to dismiss",
             click_to_dismiss=True,
         )
         self.setWindowTitle("Tacet HealthCare — Blink Monitor")
@@ -96,6 +106,12 @@ class MainWindow(QMainWindow):
         row.addWidget(scan_btn)
 
         row.addStretch()
+
+        settings_btn = QPushButton("⚙ Settings")
+        settings_btn.setStyleSheet(_BTN_STYLE)
+        settings_btn.clicked.connect(self._open_settings)
+        row.addWidget(settings_btn)
+
         return bar
 
     # ── Camera management ────────────────────────────────────────────────────
@@ -130,17 +146,21 @@ class MainWindow(QMainWindow):
 
         self._alert.dismiss()
         self._break_alert.dismiss()
+        self._water_alert.dismiss()
         self._video_label.clear()
         self._status_label.setText(f"Connecting to camera {camera_index}...")
 
-        self._thread = CameraThread(camera_index)
+        self._thread = CameraThread(camera_index, self._settings)
         self._thread.frame_ready.connect(self._update_frame)
         self._thread.blink_detected.connect(self._on_blink)
         self._thread.no_blink_alert.connect(self._alert.show_alert)
         self._thread.sit_break_alert.connect(self._break_alert.show_alert)
         self._thread.sit_break_away.connect(self._break_alert.dismiss)
+        self._thread.water_break_alert.connect(self._water_alert.show_alert)
+        self._thread.water_dismissed.connect(self._water_alert.dismiss)
         self._thread.status_changed.connect(self._status_label.setText)
         self._break_alert.dismissed.connect(self._thread.reset_sit_timer)
+        self._water_alert.dismissed.connect(self._thread.reset_water_timer)
         self._thread.start()
 
     # ── Slots ────────────────────────────────────────────────────────────────
@@ -157,6 +177,17 @@ class MainWindow(QMainWindow):
         self._alert.dismiss()
         self._status_label.setText(f"Blink detected!  Total: {total}")
 
+    def _open_settings(self):
+        dlg = SettingsDialog(self._settings, parent=self)
+        if dlg.exec():
+            # Dismiss any alerts that were just disabled
+            if not self._settings.blink_enabled:
+                self._alert.dismiss()
+            if not self._settings.sit_enabled:
+                self._break_alert.dismiss()
+            if not self._settings.water_enabled:
+                self._water_alert.dismiss()
+
     # ── Window behaviour ─────────────────────────────────────────────────────
 
     def closeEvent(self, event):
@@ -172,5 +203,6 @@ class MainWindow(QMainWindow):
     def quit(self):
         self._alert.dismiss()
         self._break_alert.dismiss()
+        self._water_alert.dismiss()
         if self._thread:
             self._thread.stop()
