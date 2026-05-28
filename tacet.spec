@@ -15,17 +15,7 @@ a = Analysis(
     hookspath=[],
     runtime_hooks=[],
     # Exclude heavy packages pulled in by mediapipe that we don't use at runtime
-    excludes=[
-        "scipy", "pandas", "IPython", "notebook",
-        "matplotlib", "contourpy", "cycler", "fonttools",
-        "kiwisolver", "pyparsing", "python_dateutil", "six",
-        "sounddevice", "PIL", "Pillow",
-        "PyQt6.QtWebEngine", "PyQt6.QtWebEngineCore", "PyQt6.QtWebEngineWidgets",
-        "PyQt6.QtSql", "PyQt6.QtTest", "PyQt6.QtBluetooth",
-        "PyQt6.QtNfc", "PyQt6.QtSerialPort", "PyQt6.QtLocation",
-        "PyQt6.QtMultimedia", "PyQt6.QtMultimediaWidgets",
-        "PyQt6.QtPdf", "PyQt6.QtPdfWidgets",
-    ],
+    excludes=["scipy", "pandas", "IPython", "notebook"],
     noarchive=False,
 )
 
