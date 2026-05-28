@@ -36,8 +36,7 @@ SIT_RESET_AWAY        = 5  * 60   # 5 min without face resets sit timer
 SIT_AWAY_DISMISS      = 3.0       # seconds face must be absent to dismiss sit alert
 WATER_RESET_AWAY      = 5  * 60   # 5 min without face resets water timer
 DRINK_HOLD_SECONDS    = 1.0       # seconds hand must stay near mouth to confirm drink
-HAND_MOUTH_RATIO      = 0.55      # proximity threshold relative to face width
-HAND_MOUTH_VERT_RATIO = 0.50      # vertical alignment tolerance relative to face width
+HAND_MOUTH_RATIO      = 0.65      # proximity threshold: closest fingertip / face width
 RECONNECT_FAIL_LIMIT  = 30
 RECONNECT_INTERVAL_MS = 1500
 
@@ -51,12 +50,12 @@ def _ear(landmarks, indices, w, h):
 
 
 def _hand_near_mouth(face_lm, hand_lm_list, w, h) -> bool:
-    """Return True if any hand is raised to mouth height for a drinking gesture.
+    """Return True if any fingertip is close to the mouth center.
 
-    Uses the four finger-base knuckles (MCP 5,9,13,17) as the reference point.
-    When raising a cup or bottle, this part of the hand faces toward the mouth,
-    making it more reliable than using the wrist or palm center.
-    Requires both lateral proximity AND vertical alignment with the mouth.
+    Tracks all five fingertips (thumb 4, index 8, middle 12, ring 16, pinky 20)
+    and triggers when the *closest* one is within HAND_MOUTH_RATIO × face_width.
+    This matches real drinking behaviour: fingertips (not knuckles) approach the
+    mouth when raising a cup or bottle.
     """
     mouth_pts = [(face_lm[i].x * w, face_lm[i].y * h) for i in MOUTH_INDICES]
     mx = sum(p[0] for p in mouth_pts) / len(mouth_pts)
@@ -67,19 +66,15 @@ def _hand_near_mouth(face_lm, hand_lm_list, w, h) -> bool:
     if face_w < 1:
         return False
     for hand in hand_lm_list:
-        # Upper palm: average of index/middle/ring/pinky MCP joints (5,9,13,17)
-        mcp_pts = [(hand[i].x * w, hand[i].y * h) for i in [5, 9, 13, 17]]
-        hx = sum(p[0] for p in mcp_pts) / 4
-        hy = sum(p[1] for p in mcp_pts) / 4
-        dist = np.hypot(hx - mx, hy - my)
-        # Close to mouth AND at approximately mouth height (not just passing by the face)
-        if dist / face_w < HAND_MOUTH_RATIO and abs(hy - my) / face_w < HAND_MOUTH_VERT_RATIO:
+        tip_pts = [(hand[i].x * w, hand[i].y * h) for i in [4, 8, 12, 16, 20]]
+        min_dist = min(np.hypot(tx - mx, ty - my) for tx, ty in tip_pts)
+        if min_dist / face_w < HAND_MOUTH_RATIO:
             return True
     return False
 
 
 def _best_hand_dist(face_lm, hand_lm_list, w, h) -> float | None:
-    """Return the closest upper-palm to mouth distance ratio across all hands, or None."""
+    """Return the closest fingertip-to-mouth distance ratio across all hands, or None."""
     if not hand_lm_list:
         return None
     mouth_pts = [(face_lm[i].x * w, face_lm[i].y * h) for i in MOUTH_INDICES]
@@ -92,10 +87,9 @@ def _best_hand_dist(face_lm, hand_lm_list, w, h) -> float | None:
         return None
     best = float("inf")
     for hand in hand_lm_list:
-        mcp_pts = [(hand[i].x * w, hand[i].y * h) for i in [5, 9, 13, 17]]
-        hx = sum(p[0] for p in mcp_pts) / 4
-        hy = sum(p[1] for p in mcp_pts) / 4
-        best = min(best, np.hypot(hx - mx, hy - my) / face_w)
+        tip_pts = [(hand[i].x * w, hand[i].y * h) for i in [4, 8, 12, 16, 20]]
+        min_dist = min(np.hypot(tx - mx, ty - my) for tx, ty in tip_pts)
+        best = min(best, min_dist / face_w)
     return best
 
 
