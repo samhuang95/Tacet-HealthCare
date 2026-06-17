@@ -1,5 +1,5 @@
 {
-  "blink_enabled": false,
+  "blink_enabled": true,
   "blink_threshold": 8.0,
   "sit_enabled": true,
   "sit_threshold": 30,

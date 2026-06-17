@@ -294,14 +294,17 @@ class CameraThread(QThread):
                             ear = (_ear(lm, LEFT_EYE, w, h) + _ear(lm, RIGHT_EYE, w, h)) / 2.0
 
                             # ── Blink detection ─────────────────────────────
+                            # Register the blink on the CLOSING edge (eyelid coming
+                            # down), not on reopening.  This way any eye closure —
+                            # quick blink or prolonged rest — resets the timer.
                             if ear < EAR_THRESHOLD:
                                 self._blink_frames += 1
-                            else:
-                                if self._blink_frames >= CONSEC_FRAMES:
+                                if self._blink_frames == CONSEC_FRAMES:
                                     self._blink_total += 1
                                     last_blink_time    = now
                                     alert_sent         = False
                                     self.blink_detected.emit(self._blink_total)
+                            else:
                                 self._blink_frames = 0
 
                             if (self._settings.blink_enabled and not alert_sent
